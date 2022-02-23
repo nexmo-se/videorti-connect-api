@@ -143,7 +143,7 @@ const startStreamer = async (streamId) => {
       sessionId: process.env.sessionId,
       token: process.env.token,
       websocket: {
-        uri: 'ws://31c9-2-220-24-117.ngrok.io/socket',
+        uri: `${process.env.websocket_url}/socket`,
         streams: [streamId],
         headers: {
           from: streamId,
