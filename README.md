@@ -6,5 +6,5 @@ This application is using the dev version of the Vonage video API SDK. Therefore
 
 1. `npm install`
 2. `node index.js`
-3. Expose port 5000 of the port that you are using with ngrok
+3. Expose port 5000 or the port that you are using with ngrok
 4. Open your ngrok URL and click on start session and then on start sending audio.
