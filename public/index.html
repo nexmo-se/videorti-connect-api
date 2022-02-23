@@ -1,0 +1,226 @@
+<html>
+<title> Translate PoC </title>
+<head>
+	<script src="https://www.dev.tokbox.com/v2/js/opentok.min.js"></script>
+<style>
+#board{
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    width: 600px;
+    height: 200px;
+}
+</style>
+</head>
+<body>
+	<div style="display: flex; justify-content: space-evenly; width: 100vw; height: 50vh;" id="videos">
+        <div id="subscriber"></div>
+        <div id="publisher"></div>
+  </div>
+	<div id="board">
+	<label id="lbl"></label><br/>
+	<label id="lblOriginal"></label><br/>
+	<button id="btnAudio" style="display: none;" onclick="start()"/> Start Sending Audio </button>
+	<button id="btn" onclick="initializeSession()"/> Start Session  </button>
+	</div>
+</body>
+
+<script>
+OT.setLogLevel(0);
+const apiKey = '47099811';
+const sessionId =
+  '2_MX40NzA5OTgxMX5-MTY0NDU4Mzg5MzQzNX53Ty91VGVPbXVXNjBLQU5VZGNVL3M4ZUt-fg';
+const token =
+  'T1==cGFydG5lcl9pZD00NzA5OTgxMSZzaWc9OTVkMjBlZmMwNDRhMTZmZmUyNDBhMjc3YjYwYmFjMjA0NWIyNzk4NDpzZXNzaW9uX2lkPTJfTVg0ME56QTVPVGd4TVg1LU1UWTBORFU0TXpnNU16UXpOWDUzVHk5MVZHVlBiWFZYTmpCTFFVNVZaR05WTDNNNFpVdC1mZyZjcmVhdGVfdGltZT0xNjQ1NTMwMjk1Jm5vbmNlPTAuNTAyNTYxNTEwODE4OTgwNyZyb2xlPXB1Ymxpc2hlciZleHBpcmVfdGltZT0xNjQ4MTIyMjk0JmluaXRpYWxfbGF5b3V0X2NsYXNzX2xpc3Q9';
+let streamId;
+let ctx;
+let gainNode;
+// (optional) add server code here
+// initializeSession();
+
+function handleError(error) {
+  if (error) {
+    alert(error.message);
+  }
+}
+
+function initializeSession() {
+  ctx = new AudioContext();
+  gainNode = ctx.createGain();
+
+  const audioEl = new Audio();
+  audioEl.setAttribute('autoplay', 'autoplay');
+  audioEl.setAttribute('playsinline', 'playsinline');
+
+  const mediaDestinationNode = ctx.createMediaStreamDestination();
+  if (/chrome/i.test(navigator.userAgent))
+    fixChrome687574(mediaDestinationNode, ctx, gainNode, audioEl);
+  else gainNode.connect(ctx.destination);
+
+  const session = OT.initSession(apiKey, sessionId);
+
+  // Subscribe to a newly created stream
+
+  // Create a publisher
+  const publisher = OT.initPublisher(
+    'publisher',
+    {
+      insertMode: 'append',
+      // width: '30%',
+      // height: '50%',
+    },
+    handleError
+  );
+  publisher.on('streamCreated', (event) => {
+    console.log(event);
+    streamId = event.stream.id;
+    document.getElementById('btnAudio').style.display = 'block';
+    document.getElementById('btn').style.display = 'none';
+  });
+
+  // Connect to the session
+  session.connect(token, function (error) {
+    // If the connection is successful, publish to the session
+    if (error) {
+      handleError(error);
+    } else {
+      session.publish(publisher, handleError);
+    }
+  });
+
+  session.on('streamCreated', function (event) {
+    session.subscribe(
+      event.stream,
+      'subscriber',
+      {
+        insertMode: 'append',
+        // width: '30%',
+        // height: '50%',
+      },
+      handleError
+    );
+  });
+}
+
+async function start() {
+
+  const uuid = Math.floor(Math.random(0,3)*1000000)
+ 
+
+  if (streamId) {
+    fetch('/startStreaming', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ streamId: streamId }),
+    })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((e) => console.log(e));
+  }
+
+  const wsUrl = `wss://31c9-2-220-24-117.ngrok.io/socket/?uuid=${uuid}`;
+
+  const ws = new WebSocket(wsUrl);
+  ws.binaryType = 'arraybuffer';
+  // let ctx = new AudioContext();
+  // if (ws.readyState === WebSocket.OPEN) {
+
+  //     }
+  // Fired when a message is received from the WebSocket server
+  ws.onmessage = (event) => {
+    console.log(event.data);
+    if (typeof event.data === 'string') {
+      let info = JSON.parse(event.data);
+      //  document.getElementById("lbl").innerHTML = info.original+"<br/>"+info.translated+"<br/>";
+      if(info.id === streamId){
+    document.getElementById('lbl').innerHTML = info.original;
+      }
+	  document.getElementById('lblOriginal').innerHTML = info.translated;
+      setTimeout(function () {
+        document.getElementById('lbl').innerHTML = '';
+		document.getElementById('lblOriginal').innerHTML = ''
+      }, 3000);
+    } else {
+      ctx.decodeAudioData(event.data).then(function (decodedData) {
+        // use the decoded data here
+        const source = ctx.createBufferSource();
+        source.buffer = decodedData;
+        source.connect(gainNode);
+        source.start();
+        source.addEventListener('ended', endedHandler);
+        function endedHandler(event) {
+          console.log('Your audio has finished playing');
+          source.disconnect();
+        }
+      });
+    }
+  };
+  // Fired when the WebSocket closes unexpectedly due to an error or lost connetion
+  ws.onerror = (err) => {
+    console.error(err);
+  };
+  // Fired when the WebSocket connection has been closed
+  ws.onclose = (event) => {
+    console.info('Connection to websocket closed');
+    console.log(event);
+  };
+  ws.onopen = (event) => {
+    document.getElementById('btn').innerHTML = 'Connected';
+  };
+}
+
+function fixChrome687574(loopbackDestination, audioContext, gainNode, audioEl) {
+  const outboundPeerConnection = new RTCPeerConnection();
+  const inboundPeerConnection = new RTCPeerConnection();
+
+  const onError = (e) => {
+    console.error('RTCPeerConnection loopback initialization error', e);
+  };
+
+  outboundPeerConnection.addEventListener('icecandidate', (e) => {
+    inboundPeerConnection.addIceCandidate(e.candidate).catch(onError);
+  });
+
+  inboundPeerConnection.addEventListener('icecandidate', (e) => {
+    outboundPeerConnection.addIceCandidate(e.candidate).catch(onError);
+  });
+
+  inboundPeerConnection.addEventListener('track', (e) => {
+    audioEl.srcObject = e.streams[0];
+  });
+
+  gainNode.connect(loopbackDestination);
+
+  loopbackDestination.stream.getTracks().forEach((track) => {
+    outboundPeerConnection.addTrack(track, loopbackDestination.stream);
+  });
+
+  outboundPeerConnection.createOffer().then((offer) => {
+    outboundPeerConnection.setLocalDescription(offer).catch(onError);
+
+    inboundPeerConnection
+      .setRemoteDescription(offer)
+      .then(() => {
+        inboundPeerConnection
+          .createAnswer()
+          .then((answer) => {
+            //answer.sdp = answer.sdp.replace('useinbandfec=1', 'useinbandfec=1; stereo=1');
+            inboundPeerConnection.setLocalDescription(answer).catch(onError);
+
+            outboundPeerConnection.setRemoteDescription(answer).catch(onError);
+          })
+          .catch(onError);
+      })
+      .catch(onError);
+  });
+}
+
+
+</script>
+</html>
