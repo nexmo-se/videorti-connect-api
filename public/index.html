@@ -1,7 +1,7 @@
 <html>
 <title> Translate PoC </title>
 <head>
-	<script src="https://www.dev.tokbox.com/v2/js/opentok.min.js"></script>
+	<script src="https://www.tokbox.com/v2/js/opentok.min.js"></script>
 <style>
 #board{
     position: absolute;
@@ -33,11 +33,11 @@
 
 <script>
 OT.setLogLevel(0);
-const apiKey = '47099811';
+const apiKey = '47396501';
 const sessionId =
-  '2_MX40NzA5OTgxMX5-MTY0NDU4Mzg5MzQzNX53Ty91VGVPbXVXNjBLQU5VZGNVL3M4ZUt-fg';
+  '1_MX40NzM5NjUwMX5-MTY5NzYyOTEzODQ1NX55RmljejhKMnVzRExXSmhUbklzQ25VeSt-fn4';
 const token =
-  'T1==cGFydG5lcl9pZD00NzA5OTgxMSZzaWc9OTVkMjBlZmMwNDRhMTZmZmUyNDBhMjc3YjYwYmFjMjA0NWIyNzk4NDpzZXNzaW9uX2lkPTJfTVg0ME56QTVPVGd4TVg1LU1UWTBORFU0TXpnNU16UXpOWDUzVHk5MVZHVlBiWFZYTmpCTFFVNVZaR05WTDNNNFpVdC1mZyZjcmVhdGVfdGltZT0xNjQ1NTMwMjk1Jm5vbmNlPTAuNTAyNTYxNTEwODE4OTgwNyZyb2xlPXB1Ymxpc2hlciZleHBpcmVfdGltZT0xNjQ4MTIyMjk0JmluaXRpYWxfbGF5b3V0X2NsYXNzX2xpc3Q9';
+  'T1==cGFydG5lcl9pZD00NzM5NjUwMSZzaWc9YWJjMGYzZTJmNWUyYWMzODQ2NWViZjhhNjE0ODE3MGRlOGI2MmVmODpzZXNzaW9uX2lkPTFfTVg0ME56TTVOalV3TVg1LU1UWTVOell5T1RFek9EUTFOWDU1Um1samVqaEtNblZ6UkV4WFNtaFVia2x6UTI1VmVTdC1mbjQmY3JlYXRlX3RpbWU9MTY5NzYyOTE1MSZub25jZT0wLjI2MjI3Njk5ODU2MTQwODYmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTY5NzcxNTU1MCZpbml0aWFsX2xheW91dF9jbGFzc19saXN0PQ=='
 let streamId;
 let ctx;
 let gainNode;
@@ -128,7 +128,7 @@ async function start() {
       .catch((e) => console.log(e));
   }
 
-  const wsUrl = `wss://31c9-2-220-24-117.ngrok.io/socket/?uuid=${uuid}`;
+  const wsUrl = `wss://c939563a372f.ngrok.app/socket/?uuid=${uuid}`;
 
   const ws = new WebSocket(wsUrl);
   ws.binaryType = 'arraybuffer';

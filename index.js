@@ -15,15 +15,9 @@ app.use(express.static('public'));
 
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
-  );
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-  );
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
   next();
 });
 
@@ -43,7 +37,7 @@ app.ws('/socket', async (ws, req) => {
   console.log('someone connected');
   const uuid = req?.query?.uuid ? req.query.uuid : 'dummyuuid';
   // let uuid = 'dummyuuid';
-  let sc = new StreamingClient(uuid, 'en-US', 'es');
+  let sc = new StreamingClient(uuid, 'en-US', 'fi');
   await sc.init();
   const aWss = expressWs.getWss().clients;
 
@@ -153,7 +147,7 @@ const startStreamer = async (streamId) => {
 
     const config = {
       method: 'post',
-      url: `https://api.dev.opentok.com/v2/project/${process.env.apiKey}/connect`,
+      url: `https://api.opentok.com/v2/project/${process.env.apiKey}/connect`,
       headers: {
         'X-OPENTOK-AUTH': await generateRestToken(),
         'Content-Type': 'application/json',
@@ -170,7 +164,5 @@ const startStreamer = async (streamId) => {
   }
 };
 
-const port = process.env.PORT || 5000;
-app.listen(port, () =>
-  console.log(`Server application listening on port ${port}!`)
-);
+const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`Server application listening on port ${port}!`));
