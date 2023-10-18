@@ -53,7 +53,6 @@ app.ws('/socket', async (ws, req) => {
   // });
 
   // setTimeout(() => {
-  //   ws.send('{"original":"mis huevos"}');
   // }, 3000);
 
   sc.setAudioChunkAvailableCallback(function (chunk) {
