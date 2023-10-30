@@ -1,7 +1,6 @@
 'use strict';
 require('dotenv').config();
-const GOOGLE_APPLICATION_CREDENTIALS =
-  process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 const encoding = 'LINEAR16';
 const sampleRateHertz = 16000;
 const model = 'command_and_search';
@@ -87,7 +86,7 @@ class StreamingClient {
           id: this.id,
         });
       }
-      this.playTTS(translatedText);
+      this.getAudioData(translatedText);
     });
 
     this.recognizeStream.on('error', (err) => {
@@ -120,13 +119,8 @@ class StreamingClient {
   async translate(text) {
     let output = '';
     try {
-      let [translations] = await this.translationClient.translate(
-        text,
-        this.outputLanguage
-      );
-      translations = Array.isArray(translations)
-        ? translations
-        : [translations];
+      let [translations] = await this.translationClient.translate(text, this.outputLanguage);
+      translations = Array.isArray(translations) ? translations : [translations];
       translations.forEach((translation, i) => {
         output += `${translation}`;
       });
@@ -137,7 +131,7 @@ class StreamingClient {
     return output;
   }
 
-  async playTTS(text, isSessionEnding = false) {
+  async getAudioData(text, isSessionEnding = false) {
     try {
       this.sessionEnding = isSessionEnding;
       const request = {

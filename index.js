@@ -9,6 +9,7 @@ const axios = require('axios');
 const { Readable } = require('stream');
 const jwt = require('jsonwebtoken');
 const speech = require('@google-cloud/speech');
+const path = require('path');
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -21,13 +22,24 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.get('/ec', (req, res) => {
+  const options = {
+    root: path.join(__dirname),
+  };
+  res.sendFile('public/ec.html', options);
+});
+
 app.post('/startStreaming', async (req, res) => {
   try {
     console.log('someone wants to stream');
     const streamId = req.body.streamId;
     // console.log(streamId);
     const response = await startStreamer(streamId);
-    res.send(response);
+    const render = await createExperienceComposer(process.env.sessionId);
+
+    if (render && response) {
+      return res.send(response);
+    }
   } catch (e) {
     console.log(e);
   }
@@ -35,36 +47,20 @@ app.post('/startStreaming', async (req, res) => {
 
 app.ws('/socket', async (ws, req) => {
   console.log('someone connected');
+
   const uuid = req?.query?.uuid ? req.query.uuid : 'dummyuuid';
   // let uuid = 'dummyuuid';
-  let sc = new StreamingClient(uuid, 'en-US', 'fi');
+  let sc = new StreamingClient(uuid, process.env.from, process.env.to);
   await sc.init();
   const aWss = expressWs.getWss().clients;
-
-  // aWss.forEach(function (client) {
-  //   console.log(client);
-  // });
-
-  // Array.from(expressWs.getWss().clients).map((sock) => {
-  //   console.log(sock.route);
-  // }); /* <- Your path */
-  // }).forEach(function (client) {
-  //   client.send(msg.data);
-  // });
-
-  // setTimeout(() => {
-  // }, 3000);
 
   sc.setAudioChunkAvailableCallback(function (chunk) {
     console.log('audio available');
     const aWss = expressWs.getWss('/socket').clients;
     if (ws.readyState === 1) {
       aWss.forEach(function (client) {
-        // console.log(client);
-
         client.send(chunk);
       });
-      // ws.send(chunk);
     }
   });
 
@@ -72,11 +68,8 @@ app.ws('/socket', async (ws, req) => {
     console.log(data);
     const aWss = expressWs.getWss('/socket').clients;
     aWss.forEach(function (client) {
-      // console.log(client);
-      // console.log(client._socket.server);
       client.send(JSON.stringify(data));
     });
-    // ws.send(JSON.stringify(data));
   });
   sc.startRecognizer();
   ws.on('message', (msg) => {
@@ -126,6 +119,41 @@ const generateRestToken = () => {
       }
     );
   });
+};
+
+const createExperienceComposer = async (sessionId) => {
+  try {
+    const token = process.env.token;
+    const data = JSON.stringify({
+      url: `${process.env.prod_url}/ec`,
+      sessionId: sessionId,
+      token: token,
+      projectId: process.env.apiKey,
+      maxDuration: 70,
+      // statusCallbackUrl: `${process.env.REACT_APP_API_URL_PRODUCTION}/render/status`,
+      properties: {
+        name: 'EC',
+      },
+    });
+
+    const config = {
+      method: 'post',
+      url: `https://api.opentok.com/v2/project/${process.env.apiKey}/render`,
+      headers: {
+        'X-OPENTOK-AUTH': await generateRestToken(),
+        // 'X-OPENTOK-AUTH':
+        //   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI0NzM5NjUwMSIsImlzdCI6InByb2plY3QiLCJleHAiOjE2NTg0ODM3NDIsImp0aSI6MTE5LjU3MzcwMDQzMTI2MzE1LCJpYXQiOjE2NTgzMTgzNDl9.m4yZUOFcUiQszLcglK1dgaVQucCyIxCJzjlA06cb_VI',
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    };
+
+    const response = await axios(config);
+    return response.data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
 };
 
 const startStreamer = async (streamId) => {

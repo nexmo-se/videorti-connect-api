@@ -37,7 +37,7 @@ const apiKey = '47396501';
 const sessionId =
   '1_MX40NzM5NjUwMX5-MTY5NzYyOTEzODQ1NX55RmljejhKMnVzRExXSmhUbklzQ25VeSt-fn4';
 const token =
-  'T1==cGFydG5lcl9pZD00NzM5NjUwMSZzaWc9YWJjMGYzZTJmNWUyYWMzODQ2NWViZjhhNjE0ODE3MGRlOGI2MmVmODpzZXNzaW9uX2lkPTFfTVg0ME56TTVOalV3TVg1LU1UWTVOell5T1RFek9EUTFOWDU1Um1samVqaEtNblZ6UkV4WFNtaFVia2x6UTI1VmVTdC1mbjQmY3JlYXRlX3RpbWU9MTY5NzYyOTE1MSZub25jZT0wLjI2MjI3Njk5ODU2MTQwODYmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTY5NzcxNTU1MCZpbml0aWFsX2xheW91dF9jbGFzc19saXN0PQ=='
+  'T1==cGFydG5lcl9pZD00NzM5NjUwMSZzaWc9YzE3NTEyNDA4ZjRlNzI3N2QxMzNkMjRkNDY1MjNjMjIyOWM0NzdmMDpzZXNzaW9uX2lkPTFfTVg0ME56TTVOalV3TVg1LU1UWTVOell5T1RFek9EUTFOWDU1Um1samVqaEtNblZ6UkV4WFNtaFVia2x6UTI1VmVTdC1mbjQmY3JlYXRlX3RpbWU9MTY5ODA1MzgzNSZub25jZT0wLjkxMzIwNTc1ODcxMjI2NTMmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTcwMDY0OTQzNSZpbml0aWFsX2xheW91dF9jbGFzc19saXN0PQ=='
 let streamId;
 let ctx;
 let gainNode;
@@ -95,11 +95,17 @@ function initializeSession() {
   });
 
   session.on('streamCreated', function (event) {
+    console.log(event);
+    
+    const streamName = event.stream.name
+    const targetElement = streamName === 'EC' ? null : 'subscriber'
+    const defaultUI = streamName !== 'EC'
     session.subscribe(
       event.stream,
-      'subscriber',
+      targetElement,
       {
-        insertMode: 'append',
+        // insertMode: 'append',
+       insertDefaultUI : defaultUI
         // width: '30%',
         // height: '50%',
       },
@@ -110,9 +116,7 @@ function initializeSession() {
 
 async function start() {
 
-  const uuid = Math.floor(Math.random(0,3)*1000000)
  
-
   if (streamId) {
     fetch('/startStreaming', {
       method: 'POST',
@@ -128,53 +132,28 @@ async function start() {
       .catch((e) => console.log(e));
   }
 
-  const wsUrl = `wss://c939563a372f.ngrok.app/socket/?uuid=${uuid}`;
+  const wsUrl = `wss://${window.location.origin.split('//')[1]}/socket/?uuid=${streamId}`;
 
   const ws = new WebSocket(wsUrl);
   ws.binaryType = 'arraybuffer';
-  // let ctx = new AudioContext();
-  // if (ws.readyState === WebSocket.OPEN) {
 
-  //     }
   // Fired when a message is received from the WebSocket server
   ws.onmessage = (event) => {
-    console.log(event.data);
     if (typeof event.data === 'string') {
       let info = JSON.parse(event.data);
       //  document.getElementById("lbl").innerHTML = info.original+"<br/>"+info.translated+"<br/>";
       if(info.id === streamId){
-    document.getElementById('lbl').innerHTML = info.original;
+      document.getElementById('lbl').innerHTML = info.original;
+      document.getElementById('lblRemote').innerHTML = info.translated;
       
-	  document.getElementById('lblOriginal').innerHTML = info.translated;
-      setTimeout(function () {
-        document.getElementById('lbl').innerHTML = '';
-		document.getElementById('lblOriginal').innerHTML = ''
-      }, 6000);
-    } 
-    else
-    {
-      document.getElementById('lblRemote').innerHTML = info.original;
-	  document.getElementById('lblRemoteOriginal').innerHTML = info.translated;
-      setTimeout(function () {
-        document.getElementById('lblRemote').innerHTML = '';
-		document.getElementById('lblRemoteOriginal').innerHTML = ''
-      }, 6000);
-    }
+	      // document.getElementById('lblOriginal').innerHTML = info.translated;
+        setTimeout(function () {
+          document.getElementById('lbl').innerHTML = '';
+        document.getElementById('lblRemote').innerHTML = ''
+          }, 6000);
+      }
   }
-    else {
-      ctx.decodeAudioData(event.data).then(function (decodedData) {
-        // use the decoded data here
-        const source = ctx.createBufferSource();
-        source.buffer = decodedData;
-        source.connect(gainNode);
-        source.start();
-        source.addEventListener('ended', endedHandler);
-        function endedHandler(event) {
-          console.log('Your audio has finished playing');
-          source.disconnect();
-        }
-      });
-    }
+    
   };
   // Fired when the WebSocket closes unexpectedly due to an error or lost connetion
   ws.onerror = (err) => {
@@ -189,6 +168,7 @@ async function start() {
     document.getElementById('btn').innerHTML = 'Connected';
   };
 }
+
 
 function fixChrome687574(loopbackDestination, audioContext, gainNode, audioEl) {
   const outboundPeerConnection = new RTCPeerConnection();
