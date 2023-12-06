@@ -20,10 +20,10 @@
         <div id="publisher"></div>
   </div>
 	<div id="board">
-    <p>Your Captions</p>
+    <p>Original Captions</p>
 	<label id="lbl"></label><br/>
 	<label id="lblOriginal"></label><br/>
-  <p>Remote Captions</p>
+  <p>Translated Captions</p>
   <label id="lblRemote"></label><br/>
 	<label id="lblRemoteOriginal"></label><br/>
 	<button id="btnAudio" style="display: none;" onclick="start()"/> Start Sending Audio </button>
@@ -33,11 +33,12 @@
 
 <script>
 OT.setLogLevel(0);
-const apiKey = '47396501';
+
+const apiKey = '46264952';
 const sessionId =
-  '1_MX40NzM5NjUwMX5-MTY5NzYyOTEzODQ1NX55RmljejhKMnVzRExXSmhUbklzQ25VeSt-fn4';
+  '1_MX40NjI2NDk1Mn5-MTcwMTg2MjYxMTI1MH5FUjB4S1gvaENmWGcwTzRGVmd6ZE0zYXh-fn4';
 const token =
-  'T1==cGFydG5lcl9pZD00NzM5NjUwMSZzaWc9YzE3NTEyNDA4ZjRlNzI3N2QxMzNkMjRkNDY1MjNjMjIyOWM0NzdmMDpzZXNzaW9uX2lkPTFfTVg0ME56TTVOalV3TVg1LU1UWTVOell5T1RFek9EUTFOWDU1Um1samVqaEtNblZ6UkV4WFNtaFVia2x6UTI1VmVTdC1mbjQmY3JlYXRlX3RpbWU9MTY5ODA1MzgzNSZub25jZT0wLjkxMzIwNTc1ODcxMjI2NTMmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTcwMDY0OTQzNSZpbml0aWFsX2xheW91dF9jbGFzc19saXN0PQ=='
+  'T1==cGFydG5lcl9pZD00NjI2NDk1MiZzaWc9MWM4N2Q0ZmI3MTY2ZjNiMzU4OTI0ZWIwOWI0ZGIwNzM0MzdkZmQ4YjpzZXNzaW9uX2lkPTFfTVg0ME5qSTJORGsxTW41LU1UY3dNVGcyTWpZeE1USTFNSDVGVWpCNFMxZ3ZhRU5tV0djd1R6UkdWbWQ2WkUwellYaC1mbjQmY3JlYXRlX3RpbWU9MTcwMTg2MjYyMSZub25jZT0wLjU3ODkwOTMxODA2NDA5MDcmcm9sZT1wdWJsaXNoZXImZXhwaXJlX3RpbWU9MTcwMTg4NDIyMSZpbml0aWFsX2xheW91dF9jbGFzc19saXN0PQ=='
 let streamId;
 let ctx;
 let gainNode;
@@ -62,6 +63,8 @@ function initializeSession() {
   if (/chrome/i.test(navigator.userAgent))
     fixChrome687574(mediaDestinationNode, ctx, gainNode, audioEl);
   else gainNode.connect(ctx.destination);
+
+  // const session = OT.initSession(apiKey, sessionId);
 
   const session = OT.initSession(apiKey, sessionId);
 

@@ -86,7 +86,8 @@ class StreamingClient {
           id: this.id,
         });
       }
-      this.getAudioData(translatedText);
+      // this.getAudioData(translatedText);
+      this.playTTS(translatedText);
     });
 
     this.recognizeStream.on('error', (err) => {
@@ -131,22 +132,55 @@ class StreamingClient {
     return output;
   }
 
-  async getAudioData(text, isSessionEnding = false) {
+  // async getAudioData(text, isSessionEnding = false) {
+  //   console.log('getting audio data');
+
+  //   try {
+  //     this.sessionEnding = isSessionEnding;
+  //     const request = {
+  //       input: { text: text },
+  //       voice: { languageCode: this.outputLanguage, ssmlGender: 'NEUTRAL' },
+  //       audioConfig: {
+  //         audioEncoding: encoding,
+  //         sampleRateHertz: sampleRateHertz,
+  //       },
+  //     };
+  //     const [response] = await this.ttsClient.synthesizeSpeech(request);
+  //     console.log([response]);
+
+  //     if (this.audioChunkAvailableCallback) {
+  //       this.audioChunkAvailableCallback(response.audioContent);
+  //       console.log('got audio - calling callback');
+  //     }
+  //   } catch (err) {
+  //     if (this.errorCallback) {
+  //       this.errorCallback(err);
+  //     }
+  //   }
+  // }
+
+  async playTTS(text, isSessionEnding = false) {
     try {
       this.sessionEnding = isSessionEnding;
+      console.log('getting audio data');
+
       const request = {
         input: { text: text },
-        voice: { languageCode: this.outputLanguage, ssmlGender: 'NEUTRAL' },
+        voice: { languageCode: this.outputLanguage, ssmlGender: 'MALE' },
         audioConfig: {
           audioEncoding: encoding,
           sampleRateHertz: sampleRateHertz,
         },
       };
       const [response] = await this.ttsClient.synthesizeSpeech(request);
+      console.log([response]);
+
       if (this.audioChunkAvailableCallback) {
         this.audioChunkAvailableCallback(response.audioContent);
       }
     } catch (err) {
+      console.log(err);
+
       if (this.errorCallback) {
         this.errorCallback(err);
       }
